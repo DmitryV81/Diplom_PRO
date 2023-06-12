@@ -1,31 +1,63 @@
-Role Name
+grafana
 =========
 
-A brief description of the role goes here.
+Установка и настройка Grafana для работы в качестве фронтенда к prometheus.
 
-Requirements
-------------
-
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+grafana_admin_password: "hunter1981"
 
-Dependencies
-------------
+Несколько скриншотов:
+--------------
+![Gragana1](https://github.com/DmitryV81/Diplom_PRO/blob/main/pictures/p1.png)
+![Gragana2](https://github.com/DmitryV81/Diplom_PRO/blob/main/pictures/p2.png)
+![Gragana3](https://github.com/DmitryV81/Diplom_PRO/blob/main/pictures/p3.png)
+![Gragana4](https://github.com/DmitryV81/Diplom_PRO/blob/main/pictures/p4.png)
+![Gragana5](https://github.com/DmitryV81/Diplom_PRO/blob/main/pictures/p5.png)
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+---
+- name: Include vars file
+  ansible.builtin.include_vars: grafana_vars.yaml
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+- name: Add repository
+  yum_repository:
+    name: Grafana
+    description: Grafana YUM repo
+    baseurl: https://packages.grafana.com/oss/rpm
+    gpgkey: https://packages.grafana.com/gpg.key
+    gpgcheck: no
+    sslverify: yes
+    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+
+- name: Install Grafana
+  yum:
+    name: grafana
+    state: latest
+
+- name: grafana start
+  systemd:
+    name: grafana-server
+    enabled: yes
+    state: started
+
+- name: wait for service up
+  uri:
+    url: "http://127.0.0.1:3000"
+    status_code: 200
+  register: __result
+  until: __result.status == 200
+  retries: 120
+  delay: 1
+- name: change admin password for grafana gui
+  shell : "grafana-cli admin reset-admin-password {{ grafana_admin_password }}"
+  register: __command_admin
+  changed_when: __command_admin.rc !=0
 
 License
 -------
