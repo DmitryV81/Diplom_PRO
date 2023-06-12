@@ -60,7 +60,7 @@ fastcgi_port: 9000
 Example Playbook
 ----------------
 
-I```
+```
 ---
 - name: Include vars file
   ansible.builtin.include_vars: nginx.yaml
