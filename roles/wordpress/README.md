@@ -1,31 +1,50 @@
-Role Name
+wordpress
 =========
 
-A brief description of the role goes here.
+Установка и настройка CMS Wordpress. Установка производится на одну ВМ backend1 в смонтированный в директорию /var/www/html каталог сетевого кластерного хранилища GlusterFS.
 
-Requirements
+С последующим распространением через подключение сетевого хранилища на ВМ backend2 и frontend (для синхронизации файлов)
+
+Важное замечание!
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+Поскольку wordpress содержит материалы (css, javascript) в формате ссылок к ним по незащищенному протоколу http, то во всех браузерах получаем ошибку загрузки смешанного содержимого (https - основной протокол и http-ссылки для загрузки контента и стилей). В результате разметка страницы "ползет",меню не работает и картинки не отображаются должным образом.
 
-Role Variables
---------------
+Для избежания этого необходимо внести корректировку в файл wp-config.php:
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+В конец файла добавить следующее содержимое
 
-Dependencies
+```
+if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+    $_SERVER['HTTPS'] = 'on';
+}
+```
+
+Несколько скриншотов
 ------------
+![Deploy Wordpress1](https://github.com/DmitryV81/Diplom_PRO/blob/main/pictures/w1.png)
+![Deploy Wordpress2](https://github.com/DmitryV81/Diplom_PRO/blob/main/pictures/w2.png)
+![Deploy Wordpress3](https://github.com/DmitryV81/Diplom_PRO/blob/main/pictures/w3.png)
+![Deploy Wordpress4](https://github.com/DmitryV81/Diplom_PRO/blob/main/pictures/w4.png)
+![Deploy Wordpress5](https://github.com/DmitryV81/Diplom_PRO/blob/main/pictures/w5.png)
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
 
 Example Playbook
 ----------------
+```
+---
+- name: Download and unpack latest WordPress
+  unarchive:
+    src: https://wordpress.org/latest.tar.gz
+    dest: "/var/www/html"
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+    #creates: "/var/www/html/"
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+- name: chown user "apache"
+  shell: "chown -R apache.apache /var/www/html/"
+...
+```
 
 License
 -------
