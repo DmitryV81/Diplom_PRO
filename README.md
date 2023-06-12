@@ -303,3 +303,6 @@
 └── Vagrantfile
 
 ```
+Ниже приводится описание ролей в плейбуке:
+
+1.  [all_nodes_tasks](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/all_nodes_tasks)
