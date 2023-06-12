@@ -1,31 +1,90 @@
-Role Name
+prometheus
 =========
 
-A brief description of the role goes here.
-
-Requirements
-------------
-
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+Установка и настройка Prometheus. Служит для аггрегации сведений о состоянии ВМ проекта. Можно использовать отдельно от Grafana (Графическая оболочка). Слушает порт 9090
 
 Role Variables
 --------------
-
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
-
-Dependencies
-------------
-
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+```
+prometheus_dir_configuration: "/etc/prometheus"
+prometheus_retention_time: "365d"
+prometheus_scrape_interval: "30s"
+prometheus_node_exporter: true
+prometheus_node_exporter_group: "nginx-server"
+prometheus_env: "production"
+prometheus_var_config:
+  global:
+    scrape_interval: "{{ prometheus_scrape_interval }}"
+    evaluation_interval: 5s
+  scrape_configs:
+    - job_name: prometheus
+      scrape_interval: 5m
+      static_configs:
+        - targets: ['localhost:9090']
+```
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```
+---
+- name: Include vars file
+  ansible.builtin.include_vars: prometheus_vars.yaml
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+- name: Create user prometheus
+  user:
+    name: prometheus
+    create_home: no
+    shell: /bin/false
+
+- name: Create directories for prometheus
+  file:
+    path: "{{ item  }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+  loop:
+    - '/tmp/prometheus'
+    - '/etc/prometheus'
+    - '/var/lib/prometheus'
+
+- name: Download and Unzipped Prometheus
+  unarchive:
+    src: https://github.com/prometheus/prometheus/releases/download/v2.44.0/prometheus-2.44.0.linux-amd64.tar.gz
+    dest: "/tmp/prometheus"
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+
+- name: Copy files
+  copy:
+    src: /tmp/prometheus/{{ item  }}
+    dest: /usr/local/bin/
+    remote_src: yes
+    mode: preserve
+    owner: prometheus
+    group: prometheus
+  loop: [ 'prometheus', 'promtool' ]
+
+- name: Prometheus systemd file
+  template:
+    src: prometheus.j2
+    dest: /etc/systemd/system/prometheus.service
+  notify: systemd_reload
+
+- name: prometheus configuration file
+  template:
+    src: prometheus.yml.j2
+    dest: "{{ prometheus_dir_configuration }}/prometheus.yml"
+    mode: 0755
+    owner: prometheus
+    group: prometheus
+  notify: reload_prometheus
+
+- name: start prometheus
+  systemd:
+    name: prometheus
+    state: started
+```
 
 License
 -------
