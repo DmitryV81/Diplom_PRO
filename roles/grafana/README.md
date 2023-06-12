@@ -20,7 +20,7 @@ grafana_admin_password: "hunter1981"
 
 Example Playbook
 ----------------
-
+```
 ---
 - name: Include vars file
   ansible.builtin.include_vars: grafana_vars.yaml
@@ -58,7 +58,7 @@ Example Playbook
   shell : "grafana-cli admin reset-admin-password {{ grafana_admin_password }}"
   register: __command_admin
   changed_when: __command_admin.rc !=0
-
+```
 License
 -------
 
