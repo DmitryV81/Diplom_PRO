@@ -1,31 +1,92 @@
-Role Name
+httpd
 =========
 
-A brief description of the role goes here.
+Установка и настройка веб сервера на две ВМ backend1 и backend2. Порт для подключения 8080. Балансировка нагрузки http траффика.
 
-Requirements
-------------
-
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
-
-Role Variables
---------------
-
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
-
-Dependencies
-------------
-
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```
+---
+- name: Include vars file
+  ansible.builtin.include_vars: httpd.yaml
+  
+- name: Install epel-release
+  yum:
+    name: epel-release
+    state: latest
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+- name: download remi repo rpm
+  get_url: url=http://rpms.famillecollet.com/enterprise/remi-release-7.rpm dest=/root/  
+
+- name: install remi repo rpm
+  yum: name=/root/remi-release-7.rpm state=present
+
+- name: Install http, php and php-fpm
+  yum:
+    enablerepo: "remi,remi-php72"
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - httpd
+    - php-mcrypt
+    - php-cli
+    - php-gd
+    - php-curl
+    - php-ldap
+    - php-zip
+    - php-fileinfo
+    - php
+    - php72
+    - php-fpm
+    - php-mbstring
+    - php-IDNA_Convert
+    - php-PHPMailer
+    - php-process
+    - php-simplepie
+    - php-xml
+    - php-mysql
+
+- name: Disable firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
+- name: Copy global httpd configuration
+  template: src=httpd.j2 dest=/etc/httpd/httpd.conf
+
+- name: Copy backend httpd configuration
+  template: src=wordpress.j2 dest=/etc/httpd/conf.d/wordpress.conf
+
+- name: chown user "apache"
+  shell: "chown -R apache.apache /var/www/html/"
+
+- name: Set permissions for directories
+  shell: "/usr/bin/find /var/www/html/ -type d -exec chmod 750 {} \\;"
+
+- name: Set permissions for files
+  shell: "/usr/bin/find /var/www/html/ -type f -exec chmod 640 {} \\;"
+
+- name: httpd service state
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+
+- name: Disable default pool
+  command: mv /etc/php-fpm.d/www.conf /etc/php-fpm.d/www.disabled creates=/etc/php-fpm.d/www.disabled
+  notify: restart php-fpm
+  when: (ansible_hostname == "backend1")
+
+- name: Copy php-fpm configuration
+  template: src=www.j2 dest=/etc/php-fpm.d/www.conf
+  notify: restart php-fpm
+  when: (ansible_hostname == "backend1")
+...
+```
 
 License
 -------
