@@ -5,7 +5,7 @@ all_nodes_tasks
 
 Example Playbook
 ----------------
-
+```
 ---
 - name: Copy hosts to all nodes
   copy:
@@ -15,7 +15,7 @@ Example Playbook
 - name: Disable SeLinux
   shell: |
     setenforce 0
-
+```
 License
 -------
 
