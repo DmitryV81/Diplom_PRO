@@ -1,32 +1,183 @@
-Role Name
+cluster_storage
 =========
 
-A brief description of the role goes here.
+С помощью этой роли устанавливается сервер Glusterfs на три ВМ: storage1, storage2, storage3. Роль Мастера выделяется storage1.
 
-Requirements
-------------
-
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
-
-Role Variables
---------------
-
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
-
-Dependencies
-------------
-
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+А также клиент Glusterfs на ВМ: frontend (для синхронизации каталога с бекендами), backend1, backend2 (для синхронизации каталога /var/www/html), mysqlslave (для хранения бэкапов базы данных)
 
 Example Playbook
 ----------------
+```
+---
+- name: Install required modules
+  yum:
+    name: 
+      - epel-release
+      - yum-priorities
+      - yum-utils
+      - centos-release-gluster
+    state: latest
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+- name: Install required modules
+  yum:
+    name: 
+      - glusterfs-server
+      - lvm2
+    state: present
+  when: inventory_hostname in groups['storage']
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+- name: Create a pvc /dev/sdb
+  command: pvcreate /dev/sdb
+  become: true
+  become_user: root
+  when: inventory_hostname in groups['storage']
 
+- name: Create a vg share
+  command: vgcreate share /dev/sdb
+  become: true
+  become_user: root
+  when: inventory_hostname in groups['storage']
+
+- name: Create a lv lv_share
+  command: lvcreate -n lv_share -l +100%FREE /dev/share
+  become: true
+  become_user: root
+  when: inventory_hostname in groups['storage']
+
+- name: Make a FS ext4 on lv_share
+  command: mkfs.ext4 /dev/share/lv_share
+  become: true
+  become_user: root
+  when: inventory_hostname in groups['storage']
+
+- name: Make a directory /share
+  command: mkdir /share
+  become: true
+  become_user: root
+  when: inventory_hostname in groups['storage']
+
+- name: Create a entry on /etc/fstab
+  blockinfile:
+    path: /etc/fstab
+    state: present
+    block: |
+      /dev/share/lv_share	/share	ext4	defaults	0	0
+  become: true
+  become_user: root
+  when: inventory_hostname in groups['storage']
+- name: Mount FS
+  command: mount -a
+  become: true
+  become_user: root
+  when: inventory_hostname in groups['storage']
+
+- name: Enable and start glusterd service
+  service:
+    name: glusterd
+    state: started
+    enabled: yes
+  when: inventory_hostname in groups['storage']
+
+- name: A probe storage1
+  command: gluster peer probe storage1
+  when: (ansible_hostname == "storage1")
+
+- name: A probe storage2
+  command: gluster peer probe storage2
+  when: (ansible_hostname == "storage1")
+
+- name: A probe storage3
+  command: gluster peer probe storage3
+  when: (ansible_hostname == "storage1")
+  
+- name: Gluster peer status
+  command: gluster peer status
+  when: (ansible_hostname == "storage1")
+
+- name: Gluster pool list
+  command: gluster pool list
+  when: (ansible_hostname == "storage1")
+
+- name: Make brick0
+  command: mkdir /share/brick0
+  when: (ansible_hostname == "storage1")
+  
+- name: Make brick1 for backupDB
+  command: mkdir /share/brick1
+  when: (ansible_hostname == "storage1")
+
+- name: Create volume gluster name gshare
+  command: gluster volume create gshare replica 3 storage1:/share/brick0 storage2:/share/brick0 storage3:/share/brick0
+  when: (ansible_hostname == "storage1")
+  
+- name: Create volume gluster name backupdb
+  command: gluster volume create backupdb replica 3 storage1:/share/brick1 storage2:/share/brick1 storage3:/share/brick1
+  when: (ansible_hostname == "storage1")
+
+- name: Start volume gluster gshare
+  command: gluster volume start gshare
+  when: (ansible_hostname == "storage1")
+
+- name: Start volume gluster backupdb
+  command: gluster volume start backupdb
+  when: (ansible_hostname == "storage1")
+
+- name: Install glusterfs client
+  yum:
+    name: 
+      - glusterfs-client
+    state: present
+  when: inventory_hostname in groups['client_gluster']
+
+- name: Add to client mount to /etc/fstab
+  blockinfile:
+    path: /etc/fstab
+    state: present
+    block: |  
+      storage1:gshare	/var/www/html	glusterfs	defaults,_netdev,backupvolfile-server=storage2:storage3	0	0
+  become: true
+  become_user: root
+  when: inventory_hostname in groups['client_gluster']
+
+- name: Mount to client glusterfs storage
+  command: mount -a
+  become: true
+  become_user: root
+  when: inventory_hostname in groups['client_gluster']
+  
+# Create share for mysqlslave:
+
+- name: Create folder on mysqlslave for backup
+  command: mkdir /home/backupdb
+  become: true
+  become_user: root
+  when: (ansible_hostname == "mysqlslave")  
+
+- name: Install glusterfs client
+  yum:
+    name: 
+      - glusterfs-client
+    state: present
+  when: (ansible_hostname == "mysqlslave")
+
+- name: Add to client mount to /etc/fstab
+  blockinfile:
+    path: /etc/fstab
+    state: present
+    block: |  
+      storage1:backupdb	/home/backupdb	glusterfs	defaults,_netdev,backupvolfile-server=storage2:storage3	0	0
+  become: true
+  become_user: root
+  when: (ansible_hostname == "mysqlslave")
+
+- name: Mount to client glusterfs storage
+  command: mount -a
+  become: true
+  become_user: root
+  when: (ansible_hostname == "mysqlslave") 
+
+...
+```
 License
 -------
 
