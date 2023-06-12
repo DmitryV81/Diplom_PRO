@@ -1,31 +1,119 @@
-Role Name
+nginx
 =========
 
-A brief description of the role goes here.
+Установка и настройка веб сервера nginx. Служит в качестве фронтенда в проекте. Балансирует траффик между двумя ВМ с установленным httpd.
+
+Работает на порту 443. SSL сертификаты предустановлены. Установлен клиент GlusterFS для синхронизации каталогов с бекендами.
+
+FastCGI настроен на ВМ backend1
+
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+Ниже процесс создания ssl-сертификатов для веб-сервера:
+
+```
+mkdir /etc/ssl/private
+chmod 700 /etc/ssl/private
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
+
+Generating a 2048 bit RSA private key
+............+++
+..............................................................+++
+writing new private key to '/etc/ssl/private/nginx-selfsigned.key'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [XX]:RU
+State or Province Name (full name) []:
+Locality Name (eg, city) [Default City]:
+Organization Name (eg, company) [Default Company Ltd]:OTUS
+Organizational Unit Name (eg, section) []:
+Common Name (eg, your name or your server's hostname) []:frontend
+Email Address []:hunter1981@yandex.ru
+[root@frontend ~]# openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+Generating DH parameters, 2048 bit long safe prime, generator 2
+This is going to take a long time
+............................................................................................................+...................................................................................................................................................................................................................................+........+..................................................+...................................................................................................+..........+..................+.......+.................................................................................................................................................+.....................+.................................+.....................................................+................................+...................................+.......................................................................................................+...+................................................................................................++*++*
+
+```
 
 Role Variables
 --------------
+```
+servername: FinalProject
+listen_port: 443
+backend1: 192.168.50.11
+backend2: 192.168.50.12
+backend_port: 8080
+fastcgi: 192.168.50.11
+fastcgi_port: 9000
+```
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
-
-Dependencies
-------------
-
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+I```
+---
+- name: Include vars file
+  ansible.builtin.include_vars: nginx.yaml
+  
+- name: Install epel-release
+  yum:
+    name: epel-release
+    state: latest
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+- name: Install nginx
+  yum:
+    name: nginx
+    state: present
+
+- name: Disable firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
+- name: Copy nginx configuration
+  template: src=nginx.j2 dest=/etc/nginx/nginx.conf
+
+- name: Copy nginx ssl configuration
+  template: src=ssl.j2 dest=/etc/nginx/conf.d/ssl.conf
+
+- name: copy ssl directory
+  copy:
+    src: ssl
+    dest: /etc/
+    directory_mode:
+  tags:
+    - parentdir
+
+- name: Create folder for synchronize
+  command: mkdir /var/www
+  become: true
+  become_user: root
+
+- name: Create folder for synchronize
+  command: mkdir /var/www/html
+  become: true
+  become_user: root
+
+- name: nginx service state
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+
+...
+```
 
 License
 -------
