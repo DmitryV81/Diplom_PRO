@@ -306,3 +306,13 @@
 Ниже приводится описание ролей в плейбуке:
 
 1.  [all_nodes_tasks](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/all_nodes_tasks)
+2.  [cluster_storage](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/cluster_storage)
+3.  [grafana](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/grafana)
+4.  [httpd](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/httpd)
+5.  [mysql](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/mysql)
+6.  [nginx](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/nginx)
+7.  [node_exporter](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/node_exporter)
+8.  [ntpd](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/ntpd)
+9.  [prometheus](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/prometheus)
+10.  [ssl](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/ssl)
+11.  [wordpress](https://github.com/DmitryV81/Diplom_PRO/tree/main/roles/wordpress)
