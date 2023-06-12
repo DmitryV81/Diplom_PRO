@@ -157,7 +157,8 @@ Example Playbook
     minute: "0"
     hour: "23"
     job: "/home/back.sh"
-  
+  when: (ansible_hostname == "mysqlslave")
+
 # В случае восстановления БД из ранее созданного бекапа, требуется раскомментировать код ниже.
 #- name: Copy backup to servers
 #  copy:
