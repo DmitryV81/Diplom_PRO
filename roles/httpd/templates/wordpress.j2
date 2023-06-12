@@ -1,0 +1,8 @@
+Listen 8080
+<VirtualHost *:{{ backend_port }}>
+	ServerAdmin {{ server_admin }}
+	DocumentRoot /var/www/html
+	ErrorLog /var/log/httpd/error8080.log
+	CustomLog /var/log/httpd/access8080.log combined
+#        FastCgiExternalServer /var/www/html -host 192.168.50.25:9000 
+</VirtualHost>

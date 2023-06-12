@@ -1,0 +1,5 @@
+---
+backend_port: 8080
+server_admin: hunter1981@yandex.ru
+server_address: 192.168.50.11
+server_port: 9000

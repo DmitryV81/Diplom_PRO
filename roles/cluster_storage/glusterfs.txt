@@ -1,0 +1,38 @@
+На серверах:
+yum install -y  epel-release
+yum install -y yum-priorities yum-utils
+yum install -y centos-release-gluster
+yum install -y glusterfs-server
+yum install lvm2
+
+pvcreate /dev/sdb
+vgcreate share /dev/sdb
+lvcreate -n lv_share -l +100%FREE /dev/share
+
+mkfs.ext4 /dev/share/lv_share
+setenforce 0
+mkdir /share
+echo -e "/dev/share/lv_share \t/share \text4 \tdefaults \t0 \t0" >> /etc/fstab
+mount -a
+
+на storage1:
+systemctl enable glusterd --now
+gluster peer probe storage1
+gluster peer probe storage2
+gluster peer probe storage3
+
+gluster peer status
+gluster pool list
+
+mkdir /share/brick0
+gluster volume create gshare replica 3 storage1:/share/brick0 storage2:/share/brick0 storage3:/share/brick0
+gluster volume start gshare
+
+На клиенте:
+setenforce 0
+yum install -y  epel-release
+yum install -y yum-priorities yum-utils
+yum install -y centos-release-gluster
+yum install -y glusterfs-client
+echo -e "storage1:gshare \t/var/www/html \tglusterfs \tdefaults,_netdev,backupvolfile-server=storage2:storage3 \t0 \t0" >> /etc/fstab
+mount -a

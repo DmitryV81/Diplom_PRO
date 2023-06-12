@@ -1,0 +1,9 @@
+---
+- name: Copy hosts to all nodes
+  copy:
+    src: hosts
+    dest: /etc/
+
+- name: Disable SeLinux
+  shell: |
+    setenforce 0

@@ -1,0 +1,4 @@
+yum install -y php php-fpm php-mysql php-mbstring php-process php-simplepie php-xml
+yum install -y httpd php-mcrypt php-cli php-curl php
+setenforce 0
+

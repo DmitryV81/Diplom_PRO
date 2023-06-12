@@ -1,0 +1,14 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+#127.0.1.1 backend1 backend1
+192.168.50.10 frontend
+192.168.50.11 backend1
+192.168.50.12 backend2
+192.168.50.13 mysqlmaster
+192.168.50.14 mysqlslave
+192.168.50.15 prometheus
+192.168.50.16 elk
+192.168.50.20 storage1
+192.168.50.21 storage2
+192.168.50.22 storage3
+192.168.50.25 phpfpm

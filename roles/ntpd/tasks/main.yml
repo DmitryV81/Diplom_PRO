@@ -1,0 +1,39 @@
+---
+- name: start chronyd
+  service:
+    name: chronyd
+    state: started
+    enabled: yes
+
+- name: set timezone
+  shell: timedatectl set-timezone Europe/Moscow
+ 
+- name: Install NTP
+  yum:
+    name: ntp
+    state: present
+
+- name: Copy NTP conf
+  copy:
+    src: ntp.conf
+    dest: /etc/ntp.conf
+
+- name: stop NTP
+  service:
+    name: ntpd
+    state: stopped
+    enabled: yes
+
+- name: Sync time
+  shell: ntpdate 0.centos.pool.ntp.org
+
+- name: Start NTP
+  service:
+    name: ntpd
+    state: started
+    enabled: yes
+
+- name: Sync hwclock
+  shell: hwclock -w
+
+...

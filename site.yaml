@@ -1,0 +1,62 @@
+---
+- name: Task to all node
+  hosts: all
+  become: true
+  roles:
+  - all_nodes_tasks
+  - ntpd
+
+#- name: Setup php-fpm
+#  hosts: phpfpm
+#  become: true
+#  roles:
+#  - php_fpm
+
+- name: Setup Frontend
+  hosts: frontend
+  become: true
+  roles:
+  - nginx
+
+- name: Setup Backend
+  hosts: backend1, backend2
+  become: true
+  roles:
+  - httpd
+
+- name: Setup cluster GlusterFS
+  hosts: frontend, backend1, backend2, storage1, storage2, storage3, mysqlslave
+  become: true
+  roles:
+  - cluster_storage
+
+- name: Install MySQL server
+  hosts: mysqlmaster, mysqlslave
+  become: true
+  roles:
+  - mysql
+
+- name: Setup CMS
+  hosts: backend1
+  become: true
+  roles:
+  - wordpress
+
+- name: Setup node_exporter
+  hosts: frontend, backend1, backend2, storage1, storage2, storage3, mysqlmaster, mysqlslave
+  become: true
+  roles:
+  - node_exporter
+ 
+- name: Setup Prometheus
+  hosts: prometheus
+  become: true
+  roles:
+  - prometheus
+
+- name: Setup Grafana
+  hosts: prometheus
+  become: true
+  roles:
+  - grafana  
+...

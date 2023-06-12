@@ -1,0 +1,6 @@
+---
+path_to_source_server: 192.168.50.13
+mysql_root_password: 'Hunter1981!'
+mysql_db: wordpress
+mysql_user: wordpress
+mysql_password: 'PassW0rd1!'

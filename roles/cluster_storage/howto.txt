@@ -1,0 +1,10 @@
+rpm -ivh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm
+rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-elrepo.org
+yum install drbd90-utils kmod-drbd90
+echo drbd > /etc/modules-load.d/drbd.conf
+modprobe drbd
+vi /etc/hosts
+vi /etc/drbd.d/data.res
+drbdadm create-md data
+drbdadm up data
+drbdadm primary --force data

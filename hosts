@@ -1,0 +1,18 @@
+[server]
+frontend ansible_host=192.168.50.10 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/frontend/virtualbox/private_key
+backend1 ansible_host=192.168.50.11 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/backend1/virtualbox/private_key
+backend2 ansible_host=192.168.50.12 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/backend2/virtualbox/private_key
+
+phpfpm ansible_host=192.168.50.25 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/phpfpm/virtualbox/private_key
+
+mysqlmaster ansible_host=192.168.50.13 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/mysqlmaster/virtualbox/private_key
+mysqlslave ansible_host=192.168.50.14 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/mysqlslave/virtualbox/private_key
+prometheus ansible_host=192.168.50.15 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/prometheus/virtualbox/private_key
+[storage]
+storage1 ansible_host=192.168.50.20 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/storage1/virtualbox/private_key
+storage2 ansible_host=192.168.50.21 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/storage2/virtualbox/private_key
+storage3 ansible_host=192.168.50.22 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/storage3/virtualbox/private_key
+[client_gluster]
+backend1 ansible_host=192.168.50.11 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/backend1/virtualbox/private_key
+backend2 ansible_host=192.168.50.12 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/backend2/virtualbox/private_key
+frontend ansible_host=192.168.50.10 ansible_user=vagrant ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_ssh_private_key_file=.vagrant/machines/frontend/virtualbox/private_key
